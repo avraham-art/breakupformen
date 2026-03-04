@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: #14314d;
+  --color-accent: #e5e1d3;
+  --color-background-light: #f8f7f2;
+  --color-background-dark: #0a1929;
+  --font-display: "Oswald", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+.hero-gradient {
+  background: linear-gradient(rgba(20, 49, 77, 0.92), rgba(20, 49, 77, 0.95)),
+    url('https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?q=80&w=2070&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.blog-content h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+.blog-content p { margin-bottom: 1rem; line-height: 1.75; color: #475569; }
+.dark .blog-content h2 { color: var(--color-accent); }
+.dark .blog-content p { color: #94a3b8; }
