@@ -1,0 +1,41 @@
+name: Deploy to CloudPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 213.199.39.103
+          username: breakupformen
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/breakupformen/htdocs/breakupformen.com
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart breakupformen || pm2 start npm --name "breakupformen" -- start
