@@ -35,7 +35,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/breakupformen/htdocs/breakupformen.com
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             npm install
             npm run build
+            npm install -g pm2 2>/dev/null || true
             pm2 restart breakupformen || pm2 start npm --name "breakupformen" -- start
