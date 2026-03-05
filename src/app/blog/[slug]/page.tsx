@@ -1,90 +1,87 @@
-import { getPostBySlug, posts } from '@/data/posts'
+// src/app/blog/[slug]/page.tsx
+// ==========================================
+// דף מאמר בודד עם SEO מלא - /blog/the-slug
+// ==========================================
+
+import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 
-interface Props {
-  params: Promise<{ slug: string }>
+export const revalidate = 3600
+
+type Props = {
+  params: { slug: string }
 }
 
-export async function generateStaticParams() {
-  return posts.map((post) => ({ slug: post.slug }))
-}
-
+// SEO אוטומטי לכל מאמר
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const post = getPostBySlug(slug)
-  if (!post) return {}
+  const { data: article } = await supabase
+    .from('articles')
+    .select('title, meta_description, focus_keyword, featured_image_url')
+    .eq('slug', params.slug)
+    .single()
+
+  if (!article) return { title: 'Article Not Found' }
+
   return {
-    title: `${post.title} | BREAKUPFORMEN`,
-    description: post.excerpt,
+    title: article.title,
+    description: article.meta_description,
+    keywords: article.focus_keyword,
+    openGraph: {
+      title: article.title,
+      description: article.meta_description,
+      images: article.featured_image_url ? [article.featured_image_url] : [],
+    },
   }
 }
 
-export default async function BlogPostPage({ params }: Props) {
-  const { slug } = await params
-  const post = getPostBySlug(slug)
-  if (!post) notFound()
+export default async function ArticlePage({ params }: Props) {
+  const { data: article } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single()
+
+  if (!article) notFound()
 
   return (
-    <div className="min-h-screen">
-      <div className="relative h-80 overflow-hidden">
-        <img src={post.image} alt={post.title} className="object-cover w-full h-full" />
-        <div className="absolute inset-0 bg-primary/75"></div>
-        <div className="absolute inset-0 flex items-end">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
-            <div className="flex items-center gap-3 mb-4 text-xs font-semibold uppercase tracking-widest text-accent">
-              <span>{post.category}</span>
-              <span className="w-1 h-1 bg-accent rounded-full"></span>
-              <span>{post.readTime}</span>
-            </div>
-            <h1 className="font-display text-3xl lg:text-5xl text-white uppercase leading-tight">
-              {post.title}
-            </h1>
-          </div>
+    <main className="max-w-3xl mx-auto px-4 py-12">
+      {/* תמונה ראשית */}
+      {article.featured_image_url && (
+        <div className="relative w-full h-72 rounded-xl overflow-hidden mb-8">
+          <Image
+            src={article.featured_image_url}
+            alt={article.title}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
-      </div>
+      )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center gap-4 mb-12 pb-8 border-b border-slate-200 dark:border-slate-700">
-          <Link
-            href="/blog"
-            className="text-sm text-primary dark:text-accent font-medium flex items-center gap-1 hover:underline"
-          >
-            <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Field Reports
-          </Link>
-          <span className="text-slate-300 dark:text-slate-600">|</span>
-          <span className="text-sm text-slate-500">
-            {new Date(post.publishedAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+      {/* תגיות */}
+      <div className="flex gap-2 flex-wrap mb-4">
+        {article.tags?.map((tag: string) => (
+          <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+            {tag}
           </span>
-        </div>
-
-        <div
-          className="blog-content"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-
-        <div className="mt-16 p-8 bg-primary text-white rounded-lg">
-          <h3 className="font-display text-2xl uppercase mb-3 text-accent">
-            Get the Free 30-Day Guide
-          </h3>
-          <p className="text-slate-300 mb-6">Tactical roadmap for the first month after separation.</p>
-          <form className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="Your email"
-              className="flex-grow px-4 py-3 bg-white/10 border border-white/20 rounded text-white placeholder-slate-400 outline-none focus:border-accent"
-            />
-            <button type="submit" className="bg-accent text-primary px-6 py-3 font-bold uppercase">
-              Get Guide
-            </button>
-          </form>
-        </div>
+        ))}
       </div>
-    </div>
+
+      {/* תוכן המאמר */}
+      <article
+        className="prose prose-lg max-w-none"
+        dangerouslySetInnerHTML={{ __html: article.content_html }}
+      />
+
+      {/* תאריך */}
+      <p className="text-xs text-gray-400 mt-10 border-t pt-4">
+        Published: {new Date(article.created_at).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        })}
+      </p>
+    </main>
   )
 }

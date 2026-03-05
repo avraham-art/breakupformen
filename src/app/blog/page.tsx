@@ -1,80 +1,58 @@
-import { posts } from '@/data/posts'
+// src/app/blog/page.tsx
+// ==========================================
+// דף רשימת המאמרים - /blog
+// ==========================================
+
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import type { Metadata } from 'next'
+import Image from 'next/image'
 
-export const metadata: Metadata = {
-  title: 'Field Reports | BREAKUPFORMEN',
-  description: 'Articles on resilience, co-parenting, finance, and moving forward after separation.',
-}
+export const revalidate = 3600 // רענון כל שעה
 
-export default function BlogPage() {
-  const categories = Array.from(new Set(posts.map((p) => p.category)))
+export default async function BlogPage() {
+  const { data: articles } = await supabase
+    .from('articles')
+    .select('id, title, slug, meta_description, featured_image_url, tags, created_at')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <span className="text-accent font-display uppercase tracking-widest text-sm mb-4 block">
-            Intelligence Briefings
-          </span>
-          <h1 className="font-display text-5xl lg:text-6xl uppercase tracking-tight mb-4">
-            Field Reports
-          </h1>
-          <p className="text-xl text-slate-300 font-light">
-            Tactical intelligence for men navigating separation.
-          </p>
-        </div>
-      </div>
+    <main className="max-w-4xl mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold mb-2">The Blog</h1>
+      <p className="text-gray-500 mb-10">Real talk for men navigating divorce and breakups.</p>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-wrap gap-3 mb-12">
-          <span className="px-4 py-2 bg-primary text-white text-sm font-semibold uppercase tracking-wider rounded">
-            All
-          </span>
-          {categories.map((cat) => (
-            <span
-              key={cat}
-              className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-sm font-semibold uppercase tracking-wider rounded hover:border-primary dark:hover:border-accent hover:text-primary dark:hover:text-accent transition cursor-pointer"
-            >
-              {cat}
-            </span>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {posts.map((post) => (
-            <article key={post.id} className="group">
-              <Link href={`/blog/${post.slug}`}>
-                <div className="relative overflow-hidden aspect-[16/10] mb-6">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="object-cover w-full h-full group-hover:scale-105 transition duration-500"
+      <div className="grid gap-8">
+        {articles?.map((article) => (
+          <Link key={article.id} href={`/blog/${article.slug}`}>
+            <article className="flex gap-6 items-start group cursor-pointer hover:opacity-80 transition-opacity">
+              {article.featured_image_url && (
+                <div className="relative w-40 h-28 flex-shrink-0 rounded-lg overflow-hidden">
+                  <Image
+                    src={article.featured_image_url}
+                    alt={article.title}
+                    fill
+                    className="object-cover"
                   />
                 </div>
-                <div className="flex items-center gap-3 mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  <span className="bg-primary/10 dark:bg-accent/10 text-primary dark:text-accent px-2 py-1 rounded">
-                    {post.category}
-                  </span>
-                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-                  <span>{post.readTime}</span>
+              )}
+              <div>
+                <h2 className="text-xl font-semibold group-hover:underline">{article.title}</h2>
+                <p className="text-gray-500 mt-1 text-sm line-clamp-2">{article.meta_description}</p>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {article.tags?.slice(0, 3).map((tag: string) => (
+                    <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-                <h2 className="text-xl font-bold mb-3 group-hover:text-primary dark:group-hover:text-accent transition leading-tight">
-                  {post.title}
-                </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">{post.excerpt}</p>
-                <div className="mt-4 text-xs text-slate-400">
-                  {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </div>
-              </Link>
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(article.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
             </article>
-          ))}
-        </div>
+          </Link>
+        ))}
       </div>
-    </div>
+    </main>
   )
 }
