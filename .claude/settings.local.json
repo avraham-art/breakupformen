@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm --cached .env.local)",
+      "Bash(git commit -m \"Remove .env.local from tracking\")"
+    ]
+  }
+}
