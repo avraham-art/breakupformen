@@ -1,8 +1,13 @@
 import Link from 'next/link'
-import { getRecentPosts } from '@/data/posts'
+import { supabase } from '@/lib/supabase'
 
-export default function ArticlesSection() {
-  const posts = getRecentPosts(3)
+export default async function ArticlesSection() {
+  const { data: articles } = await supabase
+    .from('articles')
+    .select('id, title, slug, meta_description, featured_image_url, tags, created_at')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(3)
 
   return (
     <section className="py-20">
@@ -25,25 +30,23 @@ export default function ArticlesSection() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {posts.map((post) => (
-            <article key={post.id} className="group">
-              <Link href={`/blog/${post.slug}`}>
+          {articles?.map((article) => (
+            <article key={article.id} className="group">
+              <Link href={`/blog/${article.slug}`}>
                 <div className="relative overflow-hidden aspect-[16/10] mb-6">
                   <img
-                    src={post.image}
-                    alt={post.title}
+                    src={article.featured_image_url}
+                    alt={article.title}
                     className="object-cover w-full h-full group-hover:scale-105 transition duration-500"
                   />
                 </div>
                 <div className="flex items-center gap-3 mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  <span>{post.category}</span>
-                  <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-                  <span>{post.readTime}</span>
+                  <span>{article.tags?.[0]}</span>
                 </div>
                 <h3 className="text-2xl font-bold mb-3 group-hover:text-primary dark:group-hover:text-accent transition leading-tight">
-                  {post.title}
+                  {article.title}
                 </h3>
-                <p className="text-slate-600 dark:text-slate-400 line-clamp-2">{post.excerpt}</p>
+                <p className="text-slate-600 dark:text-slate-400 line-clamp-2">{article.meta_description}</p>
               </Link>
             </article>
           ))}
