@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
+
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -53,13 +53,7 @@ export default async function ArticlePage({ params }: Props) {
     <main className="max-w-3xl mx-auto px-4 py-12">
       {article.featured_image_url && (
         <div className="relative w-full h-72 rounded-xl overflow-hidden mb-8">
-          <Image
-            src={article.featured_image_url}
-            alt={article.title}
-            fill
-            className="object-cover"
-            priority
-          />
+          <img src={article.featured_image_url} alt={article.title} className="w-full h-full object-cover" />
         </div>
       )}
 

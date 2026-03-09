@@ -5,7 +5,7 @@
 
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import Image from 'next/image'
+
 
 export const dynamic = 'force-dynamic'
 
@@ -27,12 +27,7 @@ export default async function BlogPage() {
             <article className="flex gap-6 items-start group cursor-pointer hover:opacity-80 transition-opacity">
               {article.featured_image_url && (
                 <div className="relative w-40 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-                  <Image
-                    src={article.featured_image_url}
-                    alt={article.title}
-                    fill
-                    className="object-cover"
-                  />
+                  <img src={article.featured_image_url} alt={article.title} className="w-full h-full object-cover" />
                 </div>
               )}
               <div>
