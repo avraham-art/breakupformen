@@ -73,8 +73,8 @@ export default async function ArticlePage({ params }: Props) {
     headline: article.title,
     description: article.meta_description ?? undefined,
     image: article.featured_image_url ?? undefined,
-    datePublished: article.created_at,
-    dateModified: article.updated_at ?? article.created_at,
+    datePublished: article.created_at ? new Date(article.created_at).toISOString() : undefined,
+    dateModified: article.updated_at ? new Date(article.updated_at).toISOString() : new Date(article.created_at).toISOString(),
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': articleUrl,
